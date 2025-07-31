@@ -2,23 +2,23 @@ import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/LeftSidebar";
 import { FaTrashAlt, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
+
 const AllPlants = () => {
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [previewImage, setPreviewImage] = useState(null);
 
-  // Fetch all plants
   const fetchPlants = async () => {
     try {
       const response = await fetch(
         "https://eb-project-backend-kappa.vercel.app/api/v0/plants/getAll"
       );
       const result = await response.json();
-      console.log(result)
       if (!response.ok) throw new Error(result.message || "Failed to fetch plants");
-      setPlants(result.plants || []);
+      setPlants(result.data || []);
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -30,7 +30,6 @@ const AllPlants = () => {
     fetchPlants();
   }, []);
 
-  // Delete a plant
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this plant?")) return;
     try {
@@ -47,39 +46,67 @@ const AllPlants = () => {
     }
   };
 
-  // Enable edit mode
   const handleEdit = (plant) => {
     setEditId(plant._id);
     setEditData({ ...plant });
+    setPreviewImage(null);
   };
 
-  // Cancel edit
   const cancelEdit = () => {
     setEditId(null);
     setEditData({});
+    setPreviewImage(null);
   };
 
-  // Handle field change
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+
+    if (name === "image" && files && files[0]) {
+      setEditData((prev) => ({ ...prev, image: files[0] }));
+      setPreviewImage(URL.createObjectURL(files[0]));
+    } else {
+      setEditData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Save changes
   const handleSave = async () => {
     try {
+      const formData = new FormData();
+      for (let key in editData) {
+        formData.append(key, editData[key]);
+      }
+
       const response = await fetch(
         `https://eb-project-backend-kappa.vercel.app/api/v0/plants/update/${editId}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editData),
+          body: formData,
         }
       );
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "Update failed");
+
       alert("Plant updated!");
       setEditId(null);
+      setPreviewImage(null);
+      fetchPlants();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleImageDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
+    try {
+      const response = await fetch(
+        `https://eb-project-backend-kappa.vercel.app/api/v0/plants/deleteImage/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Image deletion failed");
+      alert("Image deleted!");
       fetchPlants();
     } catch (err) {
       alert(err.message);
@@ -103,8 +130,6 @@ const AllPlants = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {plants.map((plant) => {
               const isEditing = editId === plant._id;
-
-              // Hide all non-editing cards when one is in edit mode
               if (editId && !isEditing) return null;
 
               return (
@@ -112,16 +137,34 @@ const AllPlants = () => {
                   key={plant._id}
                   className="bg-[#232e24] p-4 rounded-xl shadow-lg relative w-full col-span-1"
                 >
-                  {plant.image && (
-                    <img
-                      src={plant.image}
-                      alt={plant.plantname}
-                      className="w-full h-40 object-cover rounded-md mb-3"
-                    />
-                  )}
-
                   {isEditing ? (
                     <>
+                      {(previewImage || plant.image) && (
+                        <img
+                          src={previewImage || plant.image}
+                          alt="Preview"
+                          className="w-full h-40 object-cover rounded-md mb-3"
+                        />
+                      )}
+
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className="w-full mb-2"
+                      />
+
+                      {plant.image && (
+                        <button
+                          type="button"
+                          onClick={() => handleImageDelete(plant._id)}
+                          className="text-red-400 hover:text-red-600 text-sm underline mb-2"
+                        >
+                          Delete Existing Image
+                        </button>
+                      )}
+
                       <input
                         name="plantname"
                         value={editData.plantname}
@@ -181,6 +224,13 @@ const AllPlants = () => {
                     </>
                   ) : (
                     <>
+                      {plant.image && (
+                        <img
+                          src={plant.image}
+                          alt={plant.plantname}
+                          className="w-full h-40 object-cover rounded-md mb-3"
+                        />
+                      )}
                       <h2 className="text-xl font-semibold mb-1">{plant.plantname}</h2>
                       <p className="text-sm text-gray-300">Type: {plant.type}</p>
                       <p className="text-sm text-gray-300">Category: {plant.category}</p>
@@ -215,6 +265,3 @@ const AllPlants = () => {
 };
 
 export default AllPlants;
-
-
-
