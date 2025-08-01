@@ -15,7 +15,6 @@ import Settings from "./page/Settings";
 import GetAllPlants from "./page/GetAllPlants";
 
 
-
 // export const NameContext = createContext(); //2nd step
 function App() {
   // const namesapi=[
@@ -45,6 +44,4 @@ function App() {
     // </NameContext.Provider>
   );
 }
-
 export default App;
-

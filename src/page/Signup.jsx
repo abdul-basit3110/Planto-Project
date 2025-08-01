@@ -6,63 +6,28 @@ import { Link, useNavigate } from "react-router-dom";
 const Signup = () => {
   const nav = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
-
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [name,setName] =useState("");
+  const [email,setEmail] =useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  console.log("showPassword",showPassword)
+  console.log("email",email)
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const nameChange = (e) =>{
+    setName(e.target.value)
+  }
 
-  const handleSubmit = async () => {
-    const { name, email, password, confirmPassword } = form;
+  const emailChange =(e) =>{
+    setEmail(e.target.value)
+  }
 
-    if (!name || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
-      return;
-    }
+  const passwordChange =(e) =>{
+    setShowPassword(e.target.value)
+  }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(
-        "https://eb-project-backend-kappa.vercel.app/api/v0/user/createUser",
-        {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password, confirmPassword })
-        }
-      );
-
-      const data = await response.json();
-      console.log(data)
-      if (response.ok) {
-        nav("/");
-      } else {
-        setError(data.message || "Signup failed. Try again.");
-      }
-    } catch (err) {
-      console.log(err)
-      setError("Something went wrong. Please try later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const confirmPassword =(e) =>{
+    confirmPassword(e.target.value)
+  }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-r from-[#AC72A1] via-[#FBD9FA] to-[#070E2A] flex items-center justify-center px-4 py-8">
@@ -75,15 +40,15 @@ const Signup = () => {
               Signup
             </h2>
 
-            {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
+            {/* {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>} */}
 
             <div className="relative mb-4">
               <FaUser className="absolute top-1/2 right-3 transform -translate-y-1/2 text-black text-lg" />
               <input
+                value={name}
+                onChange={nameChange}
                 type="text"
-                name="name"
                 placeholder="Username"
-                onChange={handleChange}
                 className="w-full bg-transparent border-b border-black placeholder-black pl-2 pr-10 py-1 focus:outline-none"
               />
             </div>
@@ -91,20 +56,20 @@ const Signup = () => {
             <div className="relative mb-4">
               <FaEnvelope className="absolute top-1/2 right-3 transform -translate-y-1/2 text-black text-lg" />
               <input
+                value={email}
+                onChange={emailChange}
                 type="email"
-                name="email"
                 placeholder="Email"
-                onChange={handleChange}
                 className="w-full bg-transparent border-b border-black placeholder-black pl-2 pr-10 py-1 focus:outline-none"
               />
             </div>
 
             <div className="relative mb-4">
               <input
+                value={password}
+                onChange={passwordChange}
                 type={showPassword ? "text" : "password"}
-                name="password"
                 placeholder="Password"
-                onChange={handleChange}
                 className="w-full bg-transparent border-b border-black placeholder-black pl-2 pr-10 py-1 focus:outline-none"
               />
               <span
@@ -117,10 +82,10 @@ const Signup = () => {
 
             <div className="relative mb-4">
               <input
+                value={confirmpassword}
+                onChange={confirmPassword}
                 type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
                 placeholder="Confirm Password"
-                onChange={handleChange}
                 className="w-full bg-transparent border-b border-black placeholder-black pl-2 pr-10 py-1 focus:outline-none"
               />
               <span
@@ -132,11 +97,10 @@ const Signup = () => {
             </div>
 
             <button
-              onClick={handleSubmit}
-              disabled={loading}
+              // disabled={loading}
               className="w-full bg-gradient-to-t from-[#070E2A] to-[#AC72A1] py-2 rounded-full hover:opacity-90 transition font-medium text-white"
             >
-              {loading ? "Signing up..." : "Sign Up"}
+             Signup {/* {loading ? "Signing up..." : "Sign Up"} */}
             </button>
 
             <div className="mt-4 text-sm text-right text-[#070E2A]">
