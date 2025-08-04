@@ -8,8 +8,12 @@ const Signup = () => {
 
   const [name,setName] =useState("");
   const [email,setEmail] =useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [password, setPassword] = useState();
+  const [confirmPassword, setConfirmPassword] = useState();
+
+
+  const [showPassword, setShowPassword] = useState();
+  const [showConfirmPassword, setShowConfirmPassword] = useState();
   console.log("showPassword",showPassword)
   console.log("email",email)
 
@@ -22,12 +26,47 @@ const Signup = () => {
   }
 
   const passwordChange =(e) =>{
-    setShowPassword(e.target.value)
+    setPassword(e.target.value)
   }
 
-  const confirmPassword =(e) =>{
-    confirmPassword(e.target.value)
+  const confirmPasswordChange =(e) =>{
+    setConfirmPassword(e.target.value)
   }
+
+
+  const handleSubmit = async () => {
+
+    if (!name || !email || !password || !confirmPassword) {
+        console.log("All fields are required.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      console.log("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://eb-project-backend-kappa.vercel.app/api/v0/user/createUser",
+        {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, confirmPassword })
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        nav("/");
+      } else {
+        console.log(data.message || "Signup failed. Try again.");
+      }
+    } catch (err) {
+      console.log("Something went wrong. Please try later.", err);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-r from-[#AC72A1] via-[#FBD9FA] to-[#070E2A] flex items-center justify-center px-4 py-8">
@@ -82,8 +121,8 @@ const Signup = () => {
 
             <div className="relative mb-4">
               <input
-                value={confirmpassword}
-                onChange={confirmPassword}
+                value={confirmPassword}
+                onChange={confirmPasswordChange}
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 className="w-full bg-transparent border-b border-black placeholder-black pl-2 pr-10 py-1 focus:outline-none"
@@ -97,6 +136,7 @@ const Signup = () => {
             </div>
 
             <button
+            onClick={handleSubmit}
               // disabled={loading}
               className="w-full bg-gradient-to-t from-[#070E2A] to-[#AC72A1] py-2 rounded-full hover:opacity-90 transition font-medium text-white"
             >
@@ -121,4 +161,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
