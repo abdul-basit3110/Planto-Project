@@ -13,6 +13,9 @@ import Records from "./page/Records";
 import History from "./page/History";
 import Settings from "./page/Settings";
 import GetAllPlants from "./page/GetAllPlants";
+import ForgotPassword from './page/Forgot';
+import ResetPassword from './page/Reset';
+import OnlineOrders from './page/OnlineOrders'
 
 
 // export const NameContext = createContext(); //2nd step
@@ -39,6 +42,9 @@ function App() {
         <Route path="/records" element={<Records />} />
         <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/online-orders" element={<OnlineOrders />} />
       </Routes>
     </Router>
     // </NameContext.Provider>

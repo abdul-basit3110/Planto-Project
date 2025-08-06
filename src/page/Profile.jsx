@@ -30,7 +30,7 @@ const AddProfile = () => {
       if (!response.ok) {
         throw new Error(data.message || "User not found.");
       }
-      console.log(data)
+
       setUser(data.NewUser);
     } catch (err) {
       console.error("Error fetching user:", err);
@@ -38,6 +38,14 @@ const AddProfile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDateTime = (isoString) => {
+    const date = new Date(isoString);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString(),
+    };
   };
 
   return (
@@ -75,14 +83,20 @@ const AddProfile = () => {
             <h2 className="text-xl font-semibold mb-4 text-gray-800">User Details</h2>
             <p><strong>Name:</strong> {user.name}</p>
             <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
+            <p><strong>Password:</strong> {user.password || "Hidden"}</p>
+
+            {user.createdAt && (() => {
+              const { date, time } = formatDateTime(user.createdAt);
+              return (
+                <>
+                  <p><strong>Date:</strong> {date}</p>
+                  <p><strong>Time:</strong> {time}</p>
+                </>
+              );
+            })()}
+
             {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
             {user.address && <p><strong>Address:</strong> {user.address}</p>}
-            {user.createdAt && (
-              <p>
-                <strong>Joined:</strong> {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            )}
 
             {user.history && Array.isArray(user.history) && user.history.length > 0 && (
               <div className="mt-6">
@@ -104,3 +118,4 @@ const AddProfile = () => {
 };
 
 export default AddProfile;
+
