@@ -15,7 +15,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       const response = await fetch(
-        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/get/All/orders"
+        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/getAllOrders"
       );
 
       const data = await response.json();
@@ -32,12 +32,12 @@ const Orders = () => {
       setLoading(false);
     }
   };
-
+  
   const handleDelete = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
       const response = await fetch(
-        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/delete/orders",
+        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/deleteOrders",
         {
           method: "DELETE",
           headers: {
@@ -74,20 +74,21 @@ const Orders = () => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (id) => {
   try {
     const response = await fetch(
-      `https://eb-project-backend-kappa.vercel.app/api/v0/orders/update/order`,
+      `https://eb-project-backend-kappa.vercel.app/api/v0/orders/updateOrder/${id}`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...editData, orderId: editId }),
+        body: JSON.stringify({ ...editData, orderId: id }),
       }
     );
 
     const result = await response.json();
+    console.log(result)
     if (!response.ok) throw new Error(result.message || "Failed to update");
 
     alert("Order updated.");
@@ -184,7 +185,7 @@ const Orders = () => {
                           {isEditing ? (
                             <>
                               <button
-                                onClick={handleSave}
+                                onClick={()=>handleSave(order._id)}
                                 className="text-green-400 hover:text-green-600"
                               >
                                 <FaSave />
@@ -227,4 +228,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
