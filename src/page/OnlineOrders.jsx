@@ -37,7 +37,7 @@ const Orders = () => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
       const response = await fetch(
-        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/deleteOrders",
+        `https://eb-project-backend-kappa.vercel.app/api/v0/orders/deleteOrder/${orderId}`,
         {
           method: "DELETE",
           headers: {
@@ -46,14 +46,14 @@ const Orders = () => {
           body: JSON.stringify({ orderId }),
         }
       );
-      const result = await response.json();
       if (response.ok) {
         alert("Order deleted.");
         setOrders((prev) => prev.filter((o) => o._id !== orderId));
       } else {
-        alert(result.message || "Failed to delete order.");
+        alert("Failed to delete order.");
       }
     } catch (error) {
+      console.log(error)
       alert("Error deleting order.");
     }
   };
@@ -228,3 +228,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
