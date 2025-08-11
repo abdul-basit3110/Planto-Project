@@ -20,10 +20,10 @@ const Orders = () => {
 
       const data = await response.json();
       console.log("sresponse orders",data)
-      if (response.ok && Array.isArray(data.data.orders)) {
-        setOrders(data.data.orders);
+      if (response.ok && Array.isArray(data.data.order)) {
+        setOrders(data.data.order);
       } else {
-        alert(data.message || "Failed to fetch orders.");
+        alert(data.message || "Failed to fetch order.");
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -171,10 +171,10 @@ const Orders = () => {
                             onChange={handleChange}
                             className="bg-[#1f2a22] text-white px-2 py-1 rounded"
                           >
-                            <option value="Pending">Pending</option>
-                            <option value="Processing">Processing</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="pending">pending</option>
+                            <option value="processing">processing</option>
+                            <option value="completed">completed</option>
+                            <option value="cancelled">cancelled</option>
                           </select>
                         ) : (
                           order.status
