@@ -29,7 +29,7 @@ const Transfers = () => {
               <thead className="bg-[#242e24] text-left">
                 <tr>
                   <th className="px-4 py-2">Customer</th>
-                  <th className="px-4 py-2">Item</th>
+                  <th className="px-4 py-2">Item(s)</th>
                   <th className="px-4 py-2">Amount</th>
                   <th className="px-4 py-2">Date</th>
                   <th className="px-4 py-2">Status</th>
@@ -40,7 +40,7 @@ const Transfers = () => {
                   <tr key={index} className="border-t">
                     <td className="px-4 py-2">{item.name}</td>
                     <td className="px-4 py-2">{item.item}</td>
-                    <td className="px-4 py-2">{item.amount}</td>
+                    <td className="px-4 py-2">Rs: {item.amount}</td>
                     <td className="px-4 py-2">{item.date}</td>
                     <td className="px-4 py-2">
                       <span className="text-green-500 bg-[#181D14] px-2 py-1 rounded-full text-xs">

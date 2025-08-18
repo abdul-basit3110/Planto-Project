@@ -16,16 +16,33 @@ const Records = () => {
   }, []);
 
   const fetchRecordsFromLocalStorage = () => {
-    const data = JSON.parse(localStorage.getItem("plantSales")) || [];
-    // Normalize or enhance data if needed
-    const enhanced = data.map((item, index) => ({
-      id: index + 1,
+    // ✅ get data from both plantSales and transfers
+    const plantSales = JSON.parse(localStorage.getItem("plantSales")) || [];
+    const transfers = JSON.parse(localStorage.getItem("transfers")) || [];
+
+    // normalize plantSales
+    const fromPlantSales = plantSales.map((item, index) => ({
+      id: "P" + (index + 1),
       date: item.date || new Date().toISOString(),
-      type: "Income", // assuming buying plants = income
-      amount: item.price || 0,
-      description: item.name || "Plant",
+      type: "Income",
+      amount: item.amount || item.price || 0,
+      description: item.description || item.name || "Plant",
+      status: item.status || "Complete",
     }));
-    setRecords(enhanced);
+
+    // normalize transfers
+    const fromTransfers = transfers.map((item, index) => ({
+      id: "T" + (index + 1),
+      date: item.date || new Date().toISOString(),
+      type: "Income",
+      amount: item.amount || 0,
+      description: item.item || "Transfer",
+      status: item.status || "Pending",
+    }));
+
+    // merge both
+    const merged = [...fromPlantSales, ...fromTransfers];
+    setRecords(merged);
   };
 
   const filteredRecords = records.filter(record =>
@@ -43,7 +60,7 @@ const Records = () => {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <input
             type="text"
-            placeholder="Search by plant name..."
+            placeholder="Search by name or item..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-1/2 px-4 py-2 bg-[#242e24] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -57,7 +74,6 @@ const Records = () => {
             <option value="2025-08">August 2025</option>
             <option value="2025-07">July 2025</option>
             <option value="2025-06">June 2025</option>
-            {/* Add more months as needed */}
           </select>
         </div>
 
@@ -68,8 +84,9 @@ const Records = () => {
               <tr>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Amount (PKR)</th>
-                <th className="px-4 py-3">Plant</th>
+                <th className="px-4 py-3">Amount (₨)</th>
+                <th className="px-4 py-3">Plant / Item</th>
+                <th className="px-4 py-3">Status</th> {/* ✅ new column */}
               </tr>
             </thead>
             <tbody>
@@ -80,11 +97,22 @@ const Records = () => {
                     <td className="px-4 py-2 text-green-500 font-medium">{record.type}</td>
                     <td className="px-4 py-2">₨ {record.amount.toLocaleString()}</td>
                     <td className="px-4 py-2">{record.description}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          record.status === "Complete"
+                            ? "bg-green-600 text-white"
+                            : "bg-yellow-600 text-white"
+                        }`}
+                      >
+                        {record.status}
+                      </span>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-4 py-4 text-center text-gray-400">
+                  <td colSpan="5" className="px-4 py-4 text-center text-gray-400">
                     No matching records found.
                   </td>
                 </tr>

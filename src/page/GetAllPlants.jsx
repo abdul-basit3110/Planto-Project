@@ -235,7 +235,7 @@ const AllPlants = () => {
                       <p className="text-sm text-gray-300">Type: {plant.type}</p>
                       <p className="text-sm text-gray-300">Category: {plant.category}</p>
                       <p className="text-sm text-gray-300">Description: {plant.description}</p>
-                      <p className="text-sm text-gray-300">Price: ${plant.price}</p>
+                      <p className="text-sm text-gray-300">Price: Rs: {plant.price}</p>
                       <p
                         className={`text-sm mt-2 font-medium ${
                           plant.status === "Available" ? "text-green-400" : "text-red-400"
