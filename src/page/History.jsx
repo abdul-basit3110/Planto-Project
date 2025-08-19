@@ -5,62 +5,116 @@ import { useNavigate } from "react-router-dom";
 const History = () => {
   const nav = useNavigate();
   const [monthlySales, setMonthlySales] = useState({});
+  const [yearlySales, setYearlySales] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) nav("/");
 
-    calculateMonthlySales();
+    fetchOrders();
   }, []);
 
-  const calculateMonthlySales = () => {
-    const raw = localStorage.getItem("plantSales");
-    if (!raw) return;
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(
+        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/getAllOrders"
+      );
+      const data = await response.json();
 
-    const sales = JSON.parse(raw);
-    const salesByMonth = {};
+      if (response.ok && Array.isArray(data.data.order)) {
+        const completedOrders = data.data.order.filter(
+          (order) => order.status === "completed"
+        );
 
-    sales.forEach((item) => {
-      const date = new Date(item.date);
-      const year = date.getFullYear();
-      const month = date.toLocaleString("default", { month: "long" }); // e.g. "August"
-      const price = item.price || item.amount || 0;
+        const monthly = {};
+        const yearly = {};
 
-      if (year === 2025) {   // ✅ sirf 2025 ka data
-        if (!salesByMonth[month]) salesByMonth[month] = 0;
-        salesByMonth[month] += price;
+        completedOrders.forEach((order) => {
+          const amount = order.total || 0;
+          const date = new Date(order.createdAt);
+
+          const year = date.getFullYear();
+          const monthName = date.toLocaleString("default", { month: "long" });
+          const monthKey = `${monthName} ${year}`;
+
+          // ✅ Monthly Sales
+          if (!monthly[monthKey]) monthly[monthKey] = 0;
+          monthly[monthKey] += amount;
+
+          // ✅ Yearly Sales
+          if (!yearly[year]) yearly[year] = 0;
+          yearly[year] += amount;
+        });
+
+        setMonthlySales(monthly);
+        setYearlySales(yearly);
+      } else {
+        alert(data.message || "Failed to fetch orders.");
       }
-    });
-
-    setMonthlySales(salesByMonth);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      alert("An error occurred while fetching orders.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen">
       <LeftSidebar />
       <div className="w-full bg-[#181D14] p-6 overflow-y-auto text-white">
-        <h1 className="text-3xl font-semibold mb-6">📊 2025 Monthly Sales</h1>
+        <h1 className="text-3xl font-semibold mb-6">📊 Sales History</h1>
 
-        {Object.keys(monthlySales).length === 0 ? (
-          <p className="text-lg text-center mt-12">No sales data available for 2025.</p>
+        {loading ? (
+          <p className="text-gray-400">Loading sales data...</p>
         ) : (
-          <div className="bg-[#242e24] rounded-xl p-6">
-            <table className="min-w-full text-sm text-left text-white">
-              <thead>
-                <tr className="text-green-400 border-b border-green-700">
-                  <th className="px-4 py-2">Month</th>
-                  <th className="px-4 py-2">Total Sales (PKR)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(monthlySales).map(([month, total], idx) => (
-                  <tr key={idx} className="border-b border-green-900">
-                    <td className="px-4 py-2">{month}</td>
-                    <td className="px-4 py-2">Rs. {total.toLocaleString()}</td>
+          <div className="space-y-10">
+            {/* ✅ Monthly Breakdown */}
+            <div className="bg-[#242e24] rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4 text-green-400">
+                Monthly Sales
+              </h2>
+              <table className="min-w-full text-sm text-left text-white">
+                <thead>
+                  <tr className="border-b border-white">
+                    <th className="px-4 py-2">Month</th>
+                    <th className="px-4 py-2">Total Sales (PKR)</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Object.entries(monthlySales).map(([month, total], idx) => (
+                    <tr key={idx} className="border-b border-white">
+                      <td className="px-4 py-2">{month}</td>
+                      <td className="px-4 py-2">Rs. {total.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ✅ Yearly Breakdown */}
+            <div className="bg-[#242e24] rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4 text-green-400">
+                Yearly Sales
+              </h2>
+              <table className="min-w-full text-sm text-left text-white">
+                <thead>
+                  <tr className="border-b border-white">
+                    <th className="px-4 py-2">Year</th>
+                    <th className="px-4 py-2">Total Sales (PKR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(yearlySales).map(([year, total], idx) => (
+                    <tr key={idx} className="border-b border-white">
+                      <td className="px-4 py-2">{year}</td>
+                      <td className="px-4 py-2">Rs. {total.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

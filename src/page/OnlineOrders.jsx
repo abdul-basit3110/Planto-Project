@@ -86,37 +86,14 @@ const Orders = () => {
 
       alert("Order updated.");
 
-      // 🔥 Store completed order in localStorage for Transfers page
+      // ✅ Agar status completed hai to Transfers page pe redirect
       if (editData.status === "completed") {
-        const completedOrder = orders.find((order) => order._id === id);
-        const transfers = JSON.parse(localStorage.getItem("transfers")) || [];
-
-        const newTransfer = {
-          name: completedOrder.customer?.name || "N/A",
-          item: (completedOrder.items || [])
-            .map((i) => `${i.name} × ${i.quantity}`)
-            .join(", "),
-          amount: completedOrder.total || 0,
-          date: new Date().toLocaleDateString(),
-          status: "completed",
-        };
-
-        const alreadyExists = transfers.some(
-          (t) =>
-            t.name === newTransfer.name &&
-            t.item === newTransfer.item &&
-            t.amount === newTransfer.amount &&
-            t.date === newTransfer.date
-        );
-
-        if (!alreadyExists) {
-          transfers.push(newTransfer);
-          localStorage.setItem("transfers", JSON.stringify(transfers));
-        }
+        window.location.href = "/transfers";
+      } else {
+        fetchOrders();
       }
 
       setEditId(null);
-      fetchOrders();
     } catch (error) {
       alert(error.message);
     }
@@ -146,7 +123,6 @@ const Orders = () => {
                   <tr className="bg-green-700 text-left text-white">
                     <th className="py-3 px-4">S.No</th>
                     <th className="py-3 px-4">Customer Name</th>
-                    <th className="py-3 px-4">Items</th>
                     <th className="py-3 px-4">Total</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Actions</th>
@@ -165,13 +141,6 @@ const Orders = () => {
                         </td>
                         <td className="py-3 px-4">
                           {order.customer?.name || "N/A"}
-                        </td>
-                        <td className="py-3 px-4">
-                          {(order.items || []).map((item, idx) => (
-                            <div key={idx}>
-                              {item.name} × {item.quantity}
-                            </div>
-                          ))}
                         </td>
                         <td className="py-3 px-4">Rs: {order.total || 0}</td>
                         <td className="py-3 px-4">

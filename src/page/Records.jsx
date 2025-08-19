@@ -7,48 +7,58 @@ const Records = () => {
   const [search, setSearch] = useState('');
   const [month, setMonth] = useState('');
   const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) nav("/");
 
-    fetchRecordsFromLocalStorage();
+    fetchRecordsFromBackend();
   }, []);
 
-  const fetchRecordsFromLocalStorage = () => {
-    // ✅ get data from both plantSales and transfers
-    const plantSales = JSON.parse(localStorage.getItem("plantSales")) || [];
-    const transfers = JSON.parse(localStorage.getItem("transfers")) || [];
+  const fetchRecordsFromBackend = async () => {
+    try {
+      const response = await fetch(
+        "https://eb-project-backend-kappa.vercel.app/api/v0/orders/getAllOrders"
+      );
+      const data = await response.json();
 
-    // normalize plantSales
-    const fromPlantSales = plantSales.map((item, index) => ({
-      id: "P" + (index + 1),
-      date: item.date || new Date().toISOString(),
-      type: "Income",
-      amount: item.amount || item.price || 0,
-      description: item.description || item.name || "Plant",
-      status: item.status || "Complete",
-    }));
+      if (response.ok && Array.isArray(data.data.order)) {
+        // ✅ sirf completed transactions rakho
+        const completedOrders = data.data.order
+          .filter((order) => order.status === "completed")
+          .map((order) => ({
+            id: order._id,
+            date: order.createdAt || new Date().toISOString(),
+            type: "Income",
+            amount: order.total || 0,
+            status: "Complete",
+          }));
 
-    // normalize transfers
-    const fromTransfers = transfers.map((item, index) => ({
-      id: "T" + (index + 1),
-      date: item.date || new Date().toISOString(),
-      type: "Income",
-      amount: item.amount || 0,
-      description: item.item || "Transfer",
-      status: item.status || "Pending",
-    }));
-
-    // merge both
-    const merged = [...fromPlantSales, ...fromTransfers];
-    setRecords(merged);
+        setRecords(completedOrders);
+      } else {
+        alert(data.message || "Failed to fetch records.");
+      }
+    } catch (error) {
+      console.error("Error fetching records:", error);
+      alert("An error occurred while fetching records.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredRecords = records.filter(record =>
-    record.description.toLowerCase().includes(search.toLowerCase()) &&
-    (month ? record.date.startsWith(month) : true)
-  );
+  // ✅ Filter by month + search
+  const filteredRecords = records.filter(record => {
+    const recordDate = new Date(record.date);
+    const recordMonth = `${recordDate.getFullYear()}-${String(recordDate.getMonth() + 1).padStart(2, "0")}`;
+
+    const matchesMonth = month ? recordMonth === month : true;
+    const matchesSearch =
+      record.amount.toString().includes(search.toLowerCase()) ||
+      record.status.toLowerCase().includes(search.toLowerCase());
+
+    return matchesMonth && matchesSearch;
+  });
 
   return (
     <div className='flex min-h-screen'>
@@ -60,7 +70,7 @@ const Records = () => {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <input
             type="text"
-            placeholder="Search by name or item..."
+            placeholder="Search by amount or status..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-1/2 px-4 py-2 bg-[#242e24] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -79,46 +89,44 @@ const Records = () => {
 
         {/* Records Table */}
         <div className="overflow-x-auto bg-[#242e24] rounded-xl shadow p-4">
-          <table className="min-w-full text-sm text-left text-white">
-            <thead className="bg-gray-200 text-xs uppercase text-gray-700">
-              <tr>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Amount (₨)</th>
-                <th className="px-4 py-3">Plant / Item</th>
-                <th className="px-4 py-3">Status</th> {/* ✅ new column */}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((record) => (
-                  <tr key={record.id} className="border-b border-green-900">
-                    <td className="px-4 py-2">{new Date(record.date).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 text-green-500 font-medium">{record.type}</td>
-                    <td className="px-4 py-2">₨ {record.amount.toLocaleString()}</td>
-                    <td className="px-4 py-2">{record.description}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          record.status === "Complete"
-                            ? "bg-green-600 text-white"
-                            : "bg-yellow-600 text-white"
-                        }`}
-                      >
-                        {record.status}
-                      </span>
+          {loading ? (
+            <p className="text-gray-400">Loading records...</p>
+          ) : (
+            <table className="min-w-full text-sm text-left text-white">
+              <thead className="text-xs uppercase text-white font-semibold">
+                <tr>
+                  <th className="px-4 py-3">S.No</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Amount (₨)</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRecords.length > 0 ? (
+                  filteredRecords.map((record, index) => (
+                    <tr key={record.id} className="border-b border-white-900">
+                      <td className="px-4 py-2">{index + 1}</td>
+                      <td className="px-4 py-2">{new Date(record.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 text-green-500 font-medium">{record.type}</td>
+                      <td className="px-4 py-2">₨ {record.amount.toLocaleString()}</td>
+                      <td className="px-4 py-2">
+                        <span className="px-2 py-1 rounded-full text-xs bg-green-600 text-white">
+                          {record.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-4 text-center text-gray-400">
+                      No completed records found.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-4 py-4 text-center text-gray-400">
-                    No matching records found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
@@ -126,3 +134,4 @@ const Records = () => {
 };
 
 export default Records;
+
